@@ -1,0 +1,38 @@
+/* container */
+.search-bar form {
+  display: flex;
+  align-items: center;
+  gap: 8px;                 /* space between controls */
+}
+
+.search-bar * { box-sizing: border-box; }
+
+/* dropdown: fixed/narrow, don't grow */
+.search-bar .form-select {
+  width: 160px;             /* adjust as needed */
+  flex: 0 0 160px;          /* no grow, no shrink */
+}
+
+/* input: take remaining space and be editable */
+.search-bar .form-control {
+  flex: 1 1 auto;
+  min-width: 0;             /* IMPORTANT: allows shrinking inside flex */
+}
+
+/* round search button: fixed size, no overlap */
+.search-bar .btn {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: #6c63ff;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color .2s ease;
+}
+.search-bar .btn:hover { background: #574fd6; }
+.search-bar .btn i { font-size: 16px; }

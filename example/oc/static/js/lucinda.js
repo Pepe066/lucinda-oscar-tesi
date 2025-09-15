@@ -751,7 +751,8 @@ class Lucinda_view {
       return "<span class='lucinda-view-err'>Error!</span>";
     }
   }
-
+  // search version of itemlist
+  
   itemlist(...args){
 
       let dataList = Lucinda_util.matrix2obj(args[0]);
@@ -852,7 +853,7 @@ class Lucinda {
       templates: [],
       html_error_template: null,
       local_test: false,
-      verbose: false,
+      verbose: true,
 
       endpoint: [
           {
@@ -1033,6 +1034,7 @@ class Lucinda {
                   }
                 })
                 .catch(error => {console.error("Error during SPARQL query execution:", error);});
+                
             }
           }
         }
@@ -1083,12 +1085,14 @@ class Lucinda {
         let query = Lucinda_util.replace_placeholders(cr_query_block.sparql, preprocessed_param);
         let req_conf = Lucinda.get_request_conf(cr_query_block.endpoint, cr_query_block.method);
         let query_call = Lucinda.build_request(req_conf, cr_query_block.endpoint, cr_query_block.method, query);
+        console.log("SPARQL QUERY SENT:\n", query);
 
         if(Lucinda.conf.verbose){console.log("Query call:",query_call);}
         fetch(query_call.call,query_call.args)
           .then(response => response.json())
           .then(data => {
-            if(Lucinda.conf.verbose){console.log('data retrieved from endpoint:', data);}
+            console.log(data);
+            //if(Lucinda.conf.verbose){console.log('data retrieved from endpoint:', data);}
             const fun_success_controller = req_conf.success_controller;
             let res_normal = Lucinda[fun_success_controller](data);
 

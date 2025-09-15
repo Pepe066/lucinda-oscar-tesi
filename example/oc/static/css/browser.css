@@ -130,7 +130,9 @@ a:hover {
   background-image: linear-gradient(0deg, rgba(154, 49, 252, 0.2) 0%, transparent 100%)!important;
 }
 
-a.anyid-doi{}
+a.anyid-doi{
+  
+}
 
 
 
@@ -150,3 +152,4 @@ a.anyid-doi{}
   .social-media {
     flex-direction: column;
   }
+}

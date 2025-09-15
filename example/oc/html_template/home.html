@@ -1,21 +1,64 @@
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="../static/vendor/bootstrap-5.3.5-dist/css/bootstrap.min.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <!-- Custom CSS -->
+    <link href="../static/css/home.css" rel="stylesheet">
   </head>
 
-  <body>
-    <p>
-      <p>
-        <h3>Browse a BR resource (omid = br/062501806985)</h3>
-        <a href="/html_template/browser.html?value=br/062501806985">br/062501806985</a>
-      </p>
-      <!-- <br>
-      <p>
-        <h3>Browse a AR resource:</h3>
-        <a href="html_template/browser.html?value=/ar/123">html_template/browser.html?value=ar/123</a>
-      </p> -->
-    </p>
+  <body class="container py-4">
+
+    <div class="search-bar mb-4">
+      <form id="searchForm" class="d-flex align-items-center">
+        
+        <!-- Dropdown menu -->
+        <select name="category" class="form-select me-2" style="max-width: 150px;">
+          <option value="document">Document</option>
+          <option value="citation">Citation</option>
+          <option value="author">Author</option>
+          <option value="venue">Venue</option>
+        </select>
+
+        <!-- Search input -->
+        <input type="text" id="searchQuery" name="query" class="form-control" placeholder="Search..." />
+
+        <!-- Round search button -->
+        <button type="submit" class="btn btn-primary rounded-circle ms-2">
+          <i class="fa fa-search"></i>
+        </button>
+      </form>
+    </div>
+
+    <div class="d-flex justify-content-center">
+      <button type="button" class="btn btn-light">Advanced Search</button>
+    </div>
+
+
+ 
+    <h3>Browse a BR resource (omid = br/062501806985)</h3>
+    <p><a href="../html_template/browser.html?value=br/062501806985">br/062501806985</a></p>
+
+    <h3>Browse a BR journal article resource (br/061503302005)</h3>
+    <p><a href="../html_template/browser.html?value=br/061503302005">br/061503302005</a></p>
+
+    <h3>Browse an AR resource:</h3>
+    <p><a href="../html_template/browser.html?value=ar/123">ar/123</a></p>
+
+    <!-- Bootstrap JS bundle -->
+    <script src="../static/vendor/bootstrap-5.3.5-dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="../static/js/home.js"></script>
+
+
   </body>
+  
 </html>

@@ -1,12 +1,13 @@
 #id main
-#endpoint http://localhost:3333/blazegraph/namespace/kb/sparql
+#endpoint https://sparql.opencitations.net/meta
 #url br/{id}
+#method post
 #sparql ASK {
     <https://w3id.org/oc/meta/br/[[id]]> a <http://purl.org/spar/fabio/JournalArticle>.
 }
 
 #id index
-#endpoint http://localhost:3333/blazegraph/namespace/kb/sparql
+#endpoint https://sparql.opencitations.net/meta
 #method post
 #preprocess strip(id)
 #sparql PREFIX cito: <http://purl.org/spar/cito/>
@@ -18,7 +19,7 @@ WHERE {
 LIMIT 50000
 
 #id meta
-#endpoint http://localhost:3333/blazegraph/namespace/kb/sparql
+#endpoint https://sparql.opencitations.net/meta
 #method post
 #preprocess strip(id)
 #postprocess create_metadata_output()
