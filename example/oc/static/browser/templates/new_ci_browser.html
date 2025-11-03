@@ -1,0 +1,51 @@
+<div class="row">
+  <div class="col-12 col-md-6">
+    <div class="card shadow-sm p-4 h-100">
+      <div class="card-header bg-primary text-white text-center">
+        <h2>[[Lucinda:getVal(meta2.citingTitle)]]</h2>
+      </div>
+      <div class="card-body">
+        
+        <h4 class="card-title text-center">
+          Citing Resource
+        </h4>
+
+        <hr>
+
+        <span class="metadata-label">Authors:</span>
+        <p>[[Lucinda:getVal(meta2.citingAuthorNames)]]</p>
+        
+        <span class="metadata-label">Publication Date:</span>
+        <p>
+          [[Lucinda:date_entry(meta2.citingPubDateRaw)]]
+        </p>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-6">
+    <div class="card shadow-sm p-4 h-100">
+      <div class="card-header bg-success text-white text-center">
+        <h2>[[Lucinda:getVal(meta2.citedTitle)]]</h2>
+      </div>
+      <div class="card-body">
+        
+        <h4 class="card-title text-center">
+          Cited Resource
+        </h4>
+        
+        <hr>
+
+        <span class="metadata-label">Authors:</span>
+        <p>[[Lucinda:getVal(meta2.citedAuthorNames)]]</p>
+        
+        <span class="metadata-label">Publication Date:</span>
+        <p>
+          [[Lucinda:date_entry(meta2.citedPubDateRaw)]]
+        </p>
+
+      </div>
+    </div>
+  </div>
+</div>

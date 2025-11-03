@@ -92,7 +92,7 @@ footer nav ul li a:hover {
   transform: scale(1.2);
 }
 
-/*Customize Lucinda*/
+
 #__lucinda__ {
   min-height: 500px;
   padding: 5px;
@@ -136,7 +136,7 @@ a.anyid-doi{
 
 
 
-/* Responsive Design */
+
 @media (max-width: 768px) {
   header nav ul {
     flex-direction: column;

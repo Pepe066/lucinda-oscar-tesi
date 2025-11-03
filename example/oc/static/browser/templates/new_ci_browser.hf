@@ -1,0 +1,62 @@
+#id main
+#url ci/{oci}
+
+#id meta2
+#endpoint https://sparql.opencitations.net/meta
+#method post
+#preprocess pre_oci(oci)
+#postprocess post_ocmeta_call_2(resource_role, br_id, title, pub_date, authors)
+#sparql PREFIX datacite:<http://purl.org/spar/datacite/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX pro: <http://purl.org/spar/pro/>
+PREFIX prism: <http://prismstandard.org/namespaces/basic/2.0/>
+PREFIX dcterm: <http://purl.org/dc/terms/>
+
+SELECT DISTINCT
+    ?resource_role
+    ?br_id
+    (SAMPLE(?title_combined) AS ?title)
+    (SAMPLE(?raw_pub_date) AS ?pub_date)
+    (GROUP_CONCAT(DISTINCT ?author_name; SEPARATOR="|") AS ?authors)
+WHERE {
+    {
+        
+        BIND(IRI(CONCAT("https://w3id.org/oc/meta/br/[[citing_br]]")) AS ?res)
+        BIND("[[citing_br]]" AS ?br_id)
+        BIND("citing" AS ?resource_role)
+    }
+    UNION
+    {
+        
+        BIND(IRI(CONCAT("https://w3id.org/oc/meta/br/[[cited_br]]")) AS ?res)
+        BIND("[[cited_br]]" AS ?br_id)
+        BIND("cited" AS ?resource_role)
+    }
+
+    OPTIONAL { ?res datacite:hasTitle ?title_datacite . }
+    OPTIONAL { ?res dcterm:title ?title_dcterm . }
+    
+    BIND(COALESCE(?title_datacite, ?title_dcterm) AS ?title_combined)
+    
+   
+    OPTIONAL { ?res prism:publicationDate ?raw_pub_date . }
+
+    OPTIONAL {
+        ?res pro:isDocumentContextFor ?ar.
+        ?ar pro:withRole pro:author;
+        pro:isHeldBy ?ra.
+        
+        OPTIONAL { ?ra foaf:familyName ?familyName. }
+        OPTIONAL { ?ra foaf:givenName ?givenName. }
+        OPTIONAL { ?ra foaf:name ?name. }
+
+        BIND(
+            IF(BOUND(?familyName) && BOUND(?givenName),
+               CONCAT(?familyName, ", ", ?givenName),
+               COALESCE(?familyName, ?name, "Unknown Author")
+            ) AS ?author_name
+        )
+    }
+}
+GROUP BY ?resource_role ?br_id
+ORDER BY ?resource_role

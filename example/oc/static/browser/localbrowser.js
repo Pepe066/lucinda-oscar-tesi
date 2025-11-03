@@ -395,6 +395,26 @@ function strip(...args) {
     .map(str => str.trim());
 }
 
+function pre_oci(oci) {
+    const parts = oci.split('-');
+    
+    if (parts.length !== 2) {
+        return { oci: oci }; 
+    }
+
+    // Returns an object containing the new substitution placeholders
+    return {
+        citing_br: parts[0],
+        cited_br: parts[1]
+    };
+}
+
+
+
+
+
+
+
 
 /*
 Postprocess functions
@@ -543,6 +563,232 @@ function post_ocmeta_call(...args) {
 
 }
 
+// --- Helper Functions (ensure these are in the same scope) ---
+
+// Extracts the OMID digit string (e.g., '062501777134') from an OpenCitations Meta URI.
+function _get_omid_digit(uri) {
+    if (!uri || typeof uri !== 'string') return "";
+    const match = uri.match(/\/br\/(\d+)$/);
+    if (match) {
+        return match[1];
+    }
+    return uri;
+}
+
+// Creates a clickable HTML link string to the Bibliographic Resource page.
+function _create_br_link_string(omid_digit) {
+    if (!omid_digit) return "N/A";
+    // Assumes the Lucinda resource path for a Bibliographic Resource is 'br/{omid_digit}' modified
+    return `<a href="http://127.0.0.1:5500/example/oc/html_template/browser.html?value=br/${omid_digit}">${omid_digit}</a>`;
+}
+
+// --- Main Post-Processing Function for Citation Index Data ---
+
+// --- Helper Functions (keep these accessible) ---
+function _get_omid_digit(uri) {
+    if (!uri || typeof uri !== 'string') return "";
+    const match = uri.match(/\/br\/(\d+)$/);
+    if (match) {
+        return match[1];
+    }
+    return uri;
+}
+
+/*function _create_br_link_string(omid_digit) {
+    if (!omid_digit) return "N/A";
+    // Assumes the Lucinda resource path for a Bibliographic Resource is 'br/{omid_digit}'
+    return `<a href="br/${omid_digit}">${omid_digit}</a>`;
+}*/
+
+
+function post_ocmeta_call_2(...args) {
+    console.log("===== POST_OCMETA_CALL_2 DEBUG =====");
+    console.log("Args received:", args);
+    console.log("Args[0]:", args[0]);
+    console.log("Args[0] type:", typeof args[0]);
+    console.log("Args[0] is array?:", Array.isArray(args[0]));
+    
+    let alldata = args[0];
+    
+    // --- ROBUST CHECKS ---
+    if (!alldata) {
+        console.error("alldata is null or undefined");
+        return [['error'], ['No data received']];
+    }
+    
+    if (!Array.isArray(alldata)) {
+        console.error("alldata is not an array:", alldata);
+        return [['error'], ['Data is not an array']];
+    }
+    
+    console.log("alldata length:", alldata.length);
+    console.log("alldata[0]:", alldata[0]);
+    
+    if (alldata.length === 0) {
+        console.warn("alldata is empty array");
+        const fullHeader = [
+            'citingTitle', 'citingAuthorNames', 'citingPubDateRaw', 'citingBRID', 'citingBRURI',
+            'citedTitle', 'citedAuthorNames', 'citedPubDateRaw', 'citedBRID', 'citedBRURI'
+        ];
+        return [fullHeader, []]; 
+    }
+    
+    // Check if we have header + at least one data row
+    if (alldata.length <= 1) {
+        console.warn("alldata has header but no data rows");
+        const fullHeader = [
+            'citingTitle', 'citingAuthorNames', 'citingPubDateRaw', 'citingBRID', 'citingBRURI',
+            'citedTitle', 'citedAuthorNames', 'citedPubDateRaw', 'citedBRID', 'citedBRURI'
+        ];
+        return [fullHeader, []]; 
+    }
+    
+    // --- 2. Processing Setup ---
+    let citing_result = {};
+    let cited_result = {};
+    let data = alldata.slice(1);
+    
+    console.log("Data rows to process:", data);
+    
+    function _process_ordered_list_simple(items) {
+        if (!items) return ""; 
+        return items.split('|').map(author => author.trim()).filter(Boolean).join("; ");
+    }
+
+    // Process each row
+    for (let i = 0; i < data.length; i++) {
+        let entity = data[i];
+        console.log(`Processing row ${i}:`, entity);
+        
+        // SAFE ACCESS with defaults
+        const role = entity && entity[0] ? entity[0] : ""; 
+        const br_id = entity && entity[1] ? entity[1] : "";
+        const title = entity && entity[2] ? entity[2] : "";
+        const pub_date = entity && entity[3] ? entity[3] : "";
+        const author = entity && entity[4] ? entity[4] : "";
+
+        console.log(`  role: ${role}, br_id: ${br_id}, title: ${title}`);
+
+        const processedTitle = title;
+        const processedAuthorNames = _process_ordered_list_simple(author);
+        const processedBRID = br_id;
+        const processedBRURI = br_id ? `https://w3id.org/oc/meta/br/${br_id}` : "";
+
+        // Populate the correct object based on role
+        if (role === 'citing') {
+            citing_result = {
+                citingTitle: processedTitle,
+                citingAuthorNames: processedAuthorNames,
+                citingPubDateRaw: pub_date,
+                citingBRID: processedBRID,
+                citingBRURI: processedBRURI
+            };
+        } else if (role === 'cited') {
+            cited_result = {
+                citedTitle: processedTitle,
+                citedAuthorNames: processedAuthorNames,
+                citedPubDateRaw: pub_date,
+                citedBRID: processedBRID,
+                citedBRURI: processedBRURI
+            };
+        }
+    }
+
+    console.log("citing_result:", citing_result);
+    console.log("cited_result:", cited_result);
+
+    // --- 3. COMBINE INTO SINGLE ROW ---
+    const headerRow = [
+        'citingTitle', 'citingAuthorNames', 'citingPubDateRaw', 'citingBRID', 'citingBRURI',
+        'citedTitle', 'citedAuthorNames', 'citedPubDateRaw', 'citedBRID', 'citedBRURI'
+    ];
+    
+    // Create ONE row with all the data
+    const dataRow = [
+        citing_result.citingTitle || "",
+        citing_result.citingAuthorNames || "",
+        citing_result.citingPubDateRaw || "",
+        citing_result.citingBRID || "",
+        citing_result.citingBRURI || "",
+        cited_result.citedTitle || "",
+        cited_result.citedAuthorNames || "",
+        cited_result.citedPubDateRaw || "",
+        cited_result.citedBRID || "",
+        cited_result.citedBRURI || ""
+    ];
+
+    const result = [headerRow, dataRow];
+    console.log("Final result:", result);
+    console.log("===== END DEBUG =====");
+
+    return result;
+}
+
+
+// --- Main Post-Processing Function (Simplified) ---
+function post_ocindex_call(...args) {
+    let input = args[0];
+    let new_data = [];
+
+    if (Array.isArray(input)) {
+      // Keep the original header
+      new_data.push(input[0]);
+
+      for (let i = 1; i < input.length; i++) {
+              const citing_uri = input[i][0] || "";
+              const cited_uri = input[i][1] || "";
+              
+              // Extract OMID digits and create links
+              const citing_omid = _get_omid_digit(citing_uri);
+              const cited_omid = _get_omid_digit(cited_uri);
+              
+              const citing_link = _create_br_link_string(citing_omid);
+              const cited_link = _create_br_link_string(cited_omid);
+              
+              new_data.push([citing_link, cited_link]);
+          }
+          return new_data;
+      }
+
+    /*// If input is already an array (processed by reqhandler_spqrqljson)
+    if (Array.isArray(input)) {
+        // Keep the original header
+        new_data.push(input[0]);
+        
+        // Process data rows (skip header at index 0)
+        for (let i = 1; i < input.length; i++) {
+            new_data.push([
+                input[i][0] || "",  // citing_entity
+                input[i][1] || ""   // cited_entity
+            ]);
+        }
+        return new_data;
+    }*/
+    
+    // If input is the JSON response object (should NOT happen)
+    const new_header = ["citing_entity", "cited_entity"];
+    new_data.push(new_header);
+    
+    if (!input.results || !input.results.bindings || input.results.bindings.length === 0) {
+        new_data.push(new Array(new_header.length).fill(""));
+        return new_data;
+    }
+
+    let bindings = input.results.bindings;
+    for (let i = 0; i < bindings.length; i++) {
+        let binding = bindings[i];
+        const citing_uri = binding.citing_entity ? binding.citing_entity.value : "";
+        const cited_uri = binding.cited_entity ? binding.cited_entity.value : "";
+        new_data.push([citing_uri, cited_uri]);
+    }
+
+    console.log("POST_OCINDEX_CALL FINAL OUTPUT:", new_data);
+
+    return new_data;
+}
+
+
+/*
 function post_ocindex_call(...args){
 
   let alldata = args[0];
@@ -560,7 +806,7 @@ function post_ocindex_call(...args){
   let citing = data[0];
   return [citing.length];
 }
-
+*/
 
 
 /*

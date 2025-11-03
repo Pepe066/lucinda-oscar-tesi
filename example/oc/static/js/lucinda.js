@@ -100,13 +100,16 @@ class Lucinda_util {
       }
 
       static replace_placeholders(str, values) {
+        console.log(str, values)
           return str.replace(/\[\[([^\]]+)\]\]/g, (match, key) => {
               // key is the part inside [[ ]]
               return key in values ? values[key] : match; // Replace or keep the original placeholder if not found
           });
       }
+    
 
       static replace_lucinda_placeholders(index_placeholders,content) {
+         console.log(index_placeholders,content)
         var converted_content = content;
         for (const placeholder in index_placeholders) {
           converted_content = converted_content.replaceAll(
@@ -118,6 +121,7 @@ class Lucinda_util {
       }
 
       static extract_lucinda_placeholders(text,lv) {
+         console.log(text,lv)
           // Remove all HTML comments
           const noComments = text.replace(/<!--[\s\S]*?-->/g, '');
 
@@ -870,6 +874,8 @@ class Lucinda {
                 },
                 success_controller: "reqhandler_spqrqljson"
               },
+
+              
               post: {
                 args:{
                   headers:{
@@ -1082,10 +1088,12 @@ class Lucinda {
     static query_endpoint( cr_query_block ) {
 
         let preprocessed_param = Lucinda.preprocess( cr_query_block, Lucinda.current_resource.param );
+        console.log("preprocess result", preprocessed_param) 
         let query = Lucinda_util.replace_placeholders(cr_query_block.sparql, preprocessed_param);
+        
         let req_conf = Lucinda.get_request_conf(cr_query_block.endpoint, cr_query_block.method);
         let query_call = Lucinda.build_request(req_conf, cr_query_block.endpoint, cr_query_block.method, query);
-        console.log("SPARQL QUERY SENT:\n", query);
+       
 
         if(Lucinda.conf.verbose){console.log("Query call:",query_call);}
         fetch(query_call.call,query_call.args)
@@ -1156,7 +1164,31 @@ class Lucinda {
         return Array.isArray(value) ? value[0] : value;
       });
 
-      var newValues = window[functionName](...values);
+      // PIETRO
+
+      var newValues = window[functionName](...values); // This is your pre_oci result: {citing_br: "...", ...}
+
+      // Add the original keys from the arguments of the pre-processor function call
+      
+
+      if (newValues != null) {
+          if (Array.isArray(newValues)) {
+              // [Existing logic for Array return type]
+              // ...
+          } else if (typeof newValues === 'object') {
+              // === INJECTED LOGIC TO HANDLE OBJECT RETURNS (like yours) ===
+              for (const k in newValues) {
+                  // Merge the new key/value pairs (citing_br, cited_br) into the main param object
+                  param[k] = newValues[k];
+              }
+          }
+      }
+
+      return param; // param is returned, now containing {oci: "...", citing_br: "...", cited_br: "..."}
+    }
+    // PIETRO
+
+      /*var newValues = window[functionName](...values);
 
       let newValues_obj = {};
       if (Array.isArray(newValues) && newValues != null) {
@@ -1173,8 +1205,9 @@ class Lucinda {
       }
 
       return param;
-    }
+    }*/
 
+      /*PIETRO*/
     static postprocess(data, conf_block) {
 
       if (!("postprocess" in conf_block)) {
@@ -1207,17 +1240,26 @@ class Lucinda {
       });
 
       // Build new rows with correct values or nulls for missing columns
-      // slice the header
       const filtered_rows = data.slice(1).map(row =>
         indices.map(i => (i !== null ? row[i] : null))
       );
+      
       let values = [wanted_keys, ...filtered_rows];
-      var post_data = window[functionName]( values );
-      let new_data = Lucinda_util.merge_data(
-        data,
-        post_data
-      );
-
+      var post_data = window[functionName](values);
+      
+      console.log("data", data);
+      console.log("post_data", post_data);
+      
+      // ============ CONDITIONAL MERGE ============
+      // If postprocessed data has different row count, return as-is (no merge)
+      // Otherwise, merge the postprocessed columns with original data
+      if (post_data.length !== data.length) {
+        console.log("Postprocessed data has different row count - returning as-is without merge");
+        return post_data;
+      }
+      
+      // Row counts match - proceed with merge
+      let new_data = Lucinda_util.merge_data(data, post_data);
       return new_data;
     }
 
