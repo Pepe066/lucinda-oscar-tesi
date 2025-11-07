@@ -1,50 +1,77 @@
 <div class="row">
-  <div class="col-12 col-md-6">
+  
+  <div class="col-12 col-md-8 mb-4">
     <div class="card shadow-sm p-4 h-100">
-      <div class="card-header bg-primary text-white text-center">
-        <h2>[[Lucinda:getVal(meta2.citingTitle)]]</h2>
+      
+      <div class="card-header bg-secondary text-white text-center">
+        <h3 class="my-0">[[Lucinda:getVal(Lucinda:get_url_param('value'))]]</h3>
+        <small class="text-white-50">citation</small>
       </div>
       <div class="card-body">
         
-        <h4 class="card-title text-center">
-          Citing Resource
-        </h4>
-
-        <hr>
-
-        <span class="metadata-label">Authors:</span>
-        <p>[[Lucinda:getVal(meta2.citingAuthorNames)]]</p>
+        <div class="row">
         
-        <span class="metadata-label">Publication Date:</span>
-        <p>
-          [[Lucinda:date_entry(meta2.citingPubDateRaw)]]
-        </p>
+          <div class="col-12 col-md-6">
+            <div class="card shadow-sm p-3 h-100">
+              <div class="card-header bg-primary text-white text-center">
+                <h4 class="my-1">[[Lucinda:getVal(meta2.citingTitle)]]</h4>
+              </div>
+              <div class="card-body">
+                
+                <h5 class="card-title text-center">Citing Resource</h5>
+                <hr>
 
-      </div>
+                <span class="metadata-label">Authors:</span>
+                <p>[[Lucinda:getVal(meta2.citingAuthorNames)]]</p>
+                
+                <span class="metadata-label">Publication Date:</span>
+                <p>[[Lucinda:date_entry(meta2.citingPubDateRaw)]]</p>
+                
+                <span class="metadata-label">BR Identifier (omid:ecc):</span>
+                <p>[[Lucinda:getVal(meta2.citingBRID)]]</p> 
+                
+                <span class="metadata-label">Full URI:</span>
+                <p>[[Lucinda:getVal(meta2.citingBRURI)]]</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 col-md-6">
+            <div class="card shadow-sm p-3 h-100">
+              <div class="card-header bg-success text-white text-center">
+                <h4 class="my-1">[[Lucinda:getVal(meta2.citedTitle)]]</h4>
+              </div>
+              <div class="card-body">
+                
+                <h5 class="card-title text-center">Cited Resource</h5>
+                <hr>
+
+                <span class="metadata-label">Authors:</span>
+                <p>[[Lucinda:getVal(meta2.citedAuthorNames)]]</p>
+                
+                <span class="metadata-label">Publication Date:</span>
+                <p>[[Lucinda:date_entry(meta2.citedPubDateRaw)]]</p>
+
+                <span class="metadata-label">BR Identifier (omid:ecc):</span>
+                <p>[[Lucinda:getVal(meta2.citedBRID)]]</p>
+
+                <span class="metadata-label">Full URI:</span>
+                <p>[[Lucinda:getVal(meta2.citedBRURI)]]</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
     </div>
-  </div>
+    </div>
 
-  <div class="col-12 col-md-6">
+  <div class="col-12 col-md-4 mb-4">
     <div class="card shadow-sm p-4 h-100">
-      <div class="card-header bg-success text-white text-center">
-        <h2>[[Lucinda:getVal(meta2.citedTitle)]]</h2>
+      <div class="card-header bg-secondary text-white text-center">
+        <h2>General Data</h2>
       </div>
-      <div class="card-body">
-        
-        <h4 class="card-title text-center">
-          Cited Resource
-        </h4>
-        
-        <hr>
-
-        <span class="metadata-label">Authors:</span>
-        <p>[[Lucinda:getVal(meta2.citedAuthorNames)]]</p>
-        
-        <span class="metadata-label">Publication Date:</span>
-        <p>
-          [[Lucinda:date_entry(meta2.citedPubDateRaw)]]
-        </p>
-
+      <div class="card-body text-center d-flex align-items-center justify-content-center">
+        <h4 class="text-muted">(Data to be added later)</h4>
       </div>
     </div>
   </div>

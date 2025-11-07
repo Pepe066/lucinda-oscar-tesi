@@ -22,6 +22,34 @@ EXAMPLE: my_view_function("Hi",meta.name)
   ]
 */
 
+/*
+ * New function to extract the value of a specific URL parameter.
+ * Used to retrieve the CI identifier when it's passed as '?value=...'
+ * 
+ * PIETRO
+ */
+Lucinda_view.prototype.get_url_param = function (paramName) {
+  const urlParams = new URLSearchParams(window.location.search);
+  let value = urlParams.get(paramName);
+  
+  if (value && value.startsWith('ci/')) {
+      // If the parameter is 'value' and it starts with 'ci/', return the full string
+      // e.g., 'ci/060264249-06101801781'
+      return value;
+  } else if (value && value.startsWith('ci:')) {
+      // If the query was passed as '?query=ci:...'
+      return value;
+  }
+  
+  // As a fallback, try to get 'query'
+  let query = urlParams.get('query');
+  if (query && query.startsWith('ci:')) {
+      return query;
+  }
+
+  return 'Unknown CI Identifier'; // Default text if not found
+};
+
 Lucinda_view.prototype.date_entry = function (...args) {
 
   let data = Lucinda_util.lucinda_unformat(args[0]).getData();
@@ -602,15 +630,11 @@ function _get_omid_digit(uri) {
 
 
 function post_ocmeta_call_2(...args) {
-    console.log("===== POST_OCMETA_CALL_2 DEBUG =====");
-    console.log("Args received:", args);
-    console.log("Args[0]:", args[0]);
-    console.log("Args[0] type:", typeof args[0]);
-    console.log("Args[0] is array?:", Array.isArray(args[0]));
+    console.log("===== POST_OCMETA_CALL_2 DEBUG (Final Implementation: Links via Object Modification) =====");
     
     let alldata = args[0];
     
-    // --- ROBUST CHECKS ---
+    // --- ROBUST CHECKS (Unchanged) ---
     if (!alldata) {
         console.error("alldata is null or undefined");
         return [['error'], ['No data received']];
@@ -621,44 +645,28 @@ function post_ocmeta_call_2(...args) {
         return [['error'], ['Data is not an array']];
     }
     
-    console.log("alldata length:", alldata.length);
-    console.log("alldata[0]:", alldata[0]);
-    
-    if (alldata.length === 0) {
-        console.warn("alldata is empty array");
-        const fullHeader = [
-            'citingTitle', 'citingAuthorNames', 'citingPubDateRaw', 'citingBRID', 'citingBRURI',
-            'citedTitle', 'citedAuthorNames', 'citedPubDateRaw', 'citedBRID', 'citedBRURI'
-        ];
-        return [fullHeader, []]; 
-    }
-    
-    // Check if we have header + at least one data row
     if (alldata.length <= 1) {
         console.warn("alldata has header but no data rows");
         const fullHeader = [
             'citingTitle', 'citingAuthorNames', 'citingPubDateRaw', 'citingBRID', 'citingBRURI',
             'citedTitle', 'citedAuthorNames', 'citedPubDateRaw', 'citedBRID', 'citedBRURI'
         ];
-        return [fullHeader, []]; 
+        return [alldata.length > 0 ? alldata[0] : fullHeader, []]; 
     }
     
-    // --- 2. Processing Setup ---
+    // --- 2. Processing Setup (Unchanged) ---
     let citing_result = {};
     let cited_result = {};
     let data = alldata.slice(1);
-    
-    console.log("Data rows to process:", data);
     
     function _process_ordered_list_simple(items) {
         if (!items) return ""; 
         return items.split('|').map(author => author.trim()).filter(Boolean).join("; ");
     }
 
-    // Process each row
+    // Process each row (Unchanged logic for initial population)
     for (let i = 0; i < data.length; i++) {
         let entity = data[i];
-        console.log(`Processing row ${i}:`, entity);
         
         // SAFE ACCESS with defaults
         const role = entity && entity[0] ? entity[0] : ""; 
@@ -666,8 +674,6 @@ function post_ocmeta_call_2(...args) {
         const title = entity && entity[2] ? entity[2] : "";
         const pub_date = entity && entity[3] ? entity[3] : "";
         const author = entity && entity[4] ? entity[4] : "";
-
-        console.log(`  role: ${role}, br_id: ${br_id}, title: ${title}`);
 
         const processedTitle = title;
         const processedAuthorNames = _process_ordered_list_simple(author);
@@ -694,31 +700,51 @@ function post_ocmeta_call_2(...args) {
         }
     }
 
-    console.log("citing_result:", citing_result);
-    console.log("cited_result:", cited_result);
+    
+    // This transforms the values *within* the objects so the original dataRow expressions work.
 
-    // --- 3. COMBINE INTO SINGLE ROW ---
+    // Modify citing_result
+    if (citing_result.citingBRID) {
+        // Transform BRID (OMID digit string) into internal link
+        citing_result.citingBRID = _create_br_link_string(citing_result.citingBRID);
+    }
+    if (citing_result.citingBRURI) {
+        // Transform BRURI (full URI) into external link
+        citing_result.citingBRURI = `<a href="${citing_result.citingBRURI}" target="_blank">${citing_result.citingBRURI}</a>`;
+    }
+
+    // Modify cited_result
+    if (cited_result.citedBRID) {
+        // Transform BRID (OMID digit string) into internal link
+        cited_result.citedBRID = _create_br_link_string(cited_result.citedBRID);
+    }
+    if (cited_result.citedBRURI) {
+        // Transform BRURI (full URI) into external link
+        cited_result.citedBRURI = `<a href="${cited_result.citedBRURI}" target="_blank">${cited_result.citedBRURI}</a>`;
+    }
+    
+    // --- 3. COMBINE INTO SINGLE ROW (Original expressions preserved) ---
     const headerRow = [
         'citingTitle', 'citingAuthorNames', 'citingPubDateRaw', 'citingBRID', 'citingBRURI',
         'citedTitle', 'citedAuthorNames', 'citedPubDateRaw', 'citedBRID', 'citedBRURI'
     ];
     
-    // Create ONE row with all the data
+    // Create ONE row with all the data, using the original object property access
     const dataRow = [
         citing_result.citingTitle || "",
         citing_result.citingAuthorNames || "",
         citing_result.citingPubDateRaw || "",
-        citing_result.citingBRID || "",
-        citing_result.citingBRURI || "",
+        citing_result.citingBRID || "", // Now contains the link HTML
+        citing_result.citingBRURI || "", // Now contains the link HTML
         cited_result.citedTitle || "",
         cited_result.citedAuthorNames || "",
         cited_result.citedPubDateRaw || "",
-        cited_result.citedBRID || "",
-        cited_result.citedBRURI || ""
+        cited_result.citedBRID || "", // Now contains the link HTML
+        cited_result.citedBRURI || ""  // Now contains the link HTML
     ];
 
     const result = [headerRow, dataRow];
-    console.log("Final result:", result);
+    console.log("Final result with links:", result);
     console.log("===== END DEBUG =====");
 
     return result;
